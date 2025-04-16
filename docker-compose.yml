@@ -37,8 +37,10 @@ services:
       - itop_conf:/var/www/html/conf
       - itop_extensions:/var/www/html/extensions
       - itop_env_production:/var/www/html/env-production
-      - ./favicon.ico:/var/www/html/images/favicon.ico
-      # Optional, only if toolkit used
+      # Override default icon and ssmtp config
+      #- ./favicon.ico:/var/www/html/images/favicon.ico
+      #- ./ssmtp.conf:/etc/ssmtp/ssmtp.conf
+      #  For toolkit
       #- itop_env_toolkit:/var/www/html/env-toolkit
       #- itop_toolkit:/var/www/html/toolkit
     restart: unless-stopped
