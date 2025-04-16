@@ -1,0 +1,65 @@
+volumes:
+  itop_db_data:
+    name: itop_db_data
+  itop_data:
+    name: itop_data
+  itop_log:
+    name: itop_log
+  itop_conf:
+    name: itop_conf
+  itop_extensions:
+    name: itop_extensions
+  itop_env_production:
+    name: itop_env_production
+  # Optional, only if toolkit used
+  #itop_env_toolkit:
+  #  name: itop_env_toolkit
+  #itop_toolkit:
+  #  name: itop_toolkit
+networks:
+  itop_app_net:
+    name: itop_app_net
+services:
+  itop:
+    # Current:3.1.1-base
+    # Latest:3.2.0-base
+    build: .
+    container_name: itop
+    # Required for sendmail to work
+    hostname: "itop.local"
+    environment:
+      - TZ=Europe/Moscow
+    depends_on:
+      - mariadb
+    volumes:
+      - itop_data:/var/www/html/data
+      - itop_log:/var/www/html/log
+      - itop_conf:/var/www/html/conf
+      - itop_extensions:/var/www/html/extensions
+      - itop_env_production:/var/www/html/env-production
+      - ./favicon.ico:/var/www/html/images/favicon.ico
+      # Optional, only if toolkit used
+      #- itop_env_toolkit:/var/www/html/env-toolkit
+      #- itop_toolkit:/var/www/html/toolkit
+    restart: unless-stopped
+    ports:
+     - 9080:80
+    networks:
+      - itop_app_net
+  mariadb:
+    # Current:10.3.39
+    # Latest(LTS):11.7.2
+    image: mariadb:10.3.39
+    container_name: mariadb
+    environment:
+      - MYSQL_DATABASE=itop
+      - MYSQL_USER=itop
+      - MYSQL_PASSWORD=itop
+      - MYSQL_ROOT_PASSWORD=superpassword
+      - TZ="Europe/Moscow"
+    command: --max_allowed_packet=128M
+    volumes:
+      - itop_db_data:/var/lib/mysql
+    restart: unless-stopped
+    networks:
+      - itop_app_net
