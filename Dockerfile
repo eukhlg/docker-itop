@@ -70,10 +70,11 @@ ARG DEBIAN_FRONTEND
 
 RUN apt-get update && apt-get install -y \
     acl \
-    tzdata \
+    cron \
+    default-mysql-client \
     graphviz \
     ssmtp \
-    default-mysql-client
+    tzdata
 
 # Copy compiled extensions from builder stage
 COPY --from=builder /usr/local/lib/php/extensions /usr/local/lib/php/extensions
@@ -89,6 +90,7 @@ RUN ARCH=$(dpkg-architecture -qDEB_HOST_MULTIARCH) && \
 # Copy configs and scripts
 COPY --chmod=644 php/ /usr/local/etc/php/conf.d/
 COPY --chmod=644 apache/*.conf /etc/apache2/conf-available/
+COPY --chmod=755 cron.sh /cron.sh
 
 RUN a2enconf fqdn \
     && a2enconf security \
@@ -116,6 +118,13 @@ RUN mkdir -p /var/www/html/env-production \
             /var/www/html/env-test \
             /var/www/html/env-test-build \
             /var/www/html/extensions
+
+# Setup cron
+RUN echo 'SHELL=/bin/bash\n'\
+'PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin\n'\
+'*/10 * * * * www-data /usr/local/bin/php /var/www/html/webservices/cron.php --param_file=/etc/itop-cron.params >> /var/www/html/log/itop-cron.log 2>&1\n'\
+        > /etc/cron.d/itop && \
+    chmod 0644 /etc/cron.d/itop
 
 WORKDIR /var/www/html
 

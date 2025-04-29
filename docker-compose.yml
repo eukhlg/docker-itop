@@ -21,9 +21,9 @@ networks:
     name: itop_app_net
 services:
   itop:
-    # Current:3.1.1-base
-    # Latest:3.2.0-base
-    build: .
+    # Current:3.1.1
+    # Latest:3.2.0
+    image: eukhlg/itop:3.1.1
     container_name: itop
     # Required for sendmail to work
     hostname: "itop.local"
@@ -46,6 +46,26 @@ services:
     restart: unless-stopped
     ports:
      - 9080:80
+    networks:
+      - itop_app_net
+  cron:
+    image: eukhlg/itop:3.1.1
+    container_name: cron
+    environment:
+      - TZ=Europe/Moscow
+    depends_on:
+      - mariadb
+      - itop
+    volumes:
+      - itop_data:/var/www/html/data
+      - itop_log:/var/www/html/log
+      - itop_conf:/var/www/html/conf
+      - itop_extensions:/var/www/html/extensions
+      - itop_env_production:/var/www/html/env-production
+      - ./itop-cron.params:/etc/itop-cron.params
+    user: root
+    entrypoint: /cron.sh
+    restart: unless-stopped
     networks:
       - itop_app_net
   mariadb:
